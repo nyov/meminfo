@@ -1,10 +1,15 @@
-2006-09-28 1.0 * Release
-- Cleaned up source from unused functions and lines
-- Added some comments
-- Modified license to GPLv2
+2006-09-30 1.0.2 2.4 Kernel support
+- Fixed problem caused by improper parsing of /proc/meminfo on
+  2.4 kernels (now meminfo seems to work on 2.4 kernels as well,
+  but needs additional testing).
 
 2006-09-30 1.0.1 Bugfix
 - Fix against zero div when running without swap (thanks Casper)
 - Added "debugging" support (disable quiet-error munging):
   set DEBUG=1 (at the start of the source file) to see ugly python
-  tracebacks (when reporting problems for example).
+  tracebacks (when reporting problems for example).  
+
+2006-09-28 1.0 * Release
+- Cleaned up source from unused functions and lines
+- Added some comments
+- Modified license to GPLv2

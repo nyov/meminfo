@@ -13,7 +13,7 @@
 #
 # Please see the included CHANGELOG for change-related information
 #
-# VERSION: 1.0.1 (bugfix against 1.0)
+# VERSION: 1.0.2 (bugfix against 1.0.1)
 
 # set this to 1 for debugging
 DEBUG=0
@@ -141,6 +141,10 @@ def getMemInfo():
   lines = parseSplitFile("/proc/meminfo")
   for line in lines:
     label = line[0]
+    # we skip over line that starts with 'total:' (2.4 kernel has
+    # it at the start and we can't parse that)
+    if line[0] == 'total:':
+      continue
     # we only accept lines that have colons after labels
     if label.endswith(":"):
       ret[label[:-1]] = int(line[1])

@@ -9,8 +9,7 @@ have two problems (in my opinion):
   
 meminfo fills the gap (or aims to at least).
 
-Tested only on 2.6 kernels (I no longer have access to older kernels) and
-reported not to work on 2.4 kernels (quiet-munging was on, so cannot fix yet).
+Tested on 2.6 kernels and one 2.4 system (debian 3.1)
 
 ---------------------------
 

@@ -13,7 +13,10 @@
 #
 # Please see the included CHANGELOG for change-related information
 #
-# VERSION: 1.0 (feature complete)
+# VERSION: 1.0.1 (bugfix against 1.0)
+
+# set this to 1 for debugging
+DEBUG=0
 
 import os
 import string
@@ -393,11 +396,15 @@ def doIt():
 
   meminfo = getMemInfo()
   printLabel("System wide memory information:")
-  print "RAM: %.2f MiB (%.2f free [%.2f%%])\nSwap: %.2f MiB (%.2f free [%.2f%%])" % (
+  print "RAM: %.2f MiB (%.2f free [%.2f%%])" % (
     float(meminfo["MemTotal"])/1024.0, float(meminfo["UserspaceFree"])/1024.0, 
-    (100*meminfo["UserspaceFree"]) / float(meminfo["MemTotal"]),
+    (100*meminfo["UserspaceFree"]) / float(meminfo["MemTotal"]))
+  if meminfo["SwapTotal"] > 0:
+    print "Swap: %.2f MiB (%.2f free [%.2f%%])" % (
     float(meminfo["SwapTotal"])/1024.0, float(meminfo["SwapFree"])/1024.0,
     (100*meminfo["SwapFree"]) / float(meminfo["SwapTotal"]) )
+  else:
+    print "Swap: None"
 
   # statMap is created as follows:
   # - we iterate over all process data and their statusMem-hash
@@ -548,7 +555,10 @@ if __name__ == '__main__':
   # we protect against sigpipe in this way. the wrong way obviously
   # but was too lazy.
   # ./meminfo.py | head -5 caused some problems otherwise
-  try:
+  if DEBUG:
     doIt()
-  except:
-    pass
+  else:
+    try:
+      doIt()
+    except:
+      pass

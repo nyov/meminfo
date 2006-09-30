@@ -9,6 +9,9 @@ have two problems (in my opinion):
   
 meminfo fills the gap (or aims to at least).
 
+Tested only on 2.6 kernels (I no longer have access to older kernels) and
+reported not to work on 2.4 kernels (quiet-munging was on, so cannot fix yet).
+
 ---------------------------
 
 meminfo is Copyright 2006 Aleksandr Koltsoff.
@@ -38,4 +41,3 @@ Hope you find it useful, I sure did,
 
 Aleksandr Koltsoff
 2006-09-28
-

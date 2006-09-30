@@ -2,3 +2,9 @@
 - Cleaned up source from unused functions and lines
 - Added some comments
 - Modified license to GPLv2
+
+2006-09-30 1.0.1 Bugfix
+- Fix against zero div when running without swap (thanks Casper)
+- Added "debugging" support (disable quiet-error munging):
+  set DEBUG=1 (at the start of the source file) to see ugly python
+  tracebacks (when reporting problems for example).

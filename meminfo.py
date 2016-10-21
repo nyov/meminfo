@@ -15,14 +15,15 @@
 #
 # VERSION: 1.0.3 (move to github, no code changes)
 
-# set this to 1 for debugging
-DEBUG=0
-
+from __future__ import print_function
 import os
 import string
 import pwd
 import grp
 import time
+
+# set this to 1 for debugging
+DEBUG=0
 
 # utility class to act as a cache for UID lookups
 # since UID lookups will cause possible NSS activity
@@ -87,8 +88,8 @@ class JustifiedTable:
     row = self.rows[idx]
     for idx in range(len(row)-1):
       if row[idx] != "None":
-        print "%*s" % (self.columnWidths[idx], row[idx]),
-    print row[-1]
+        print("%*s" % (self.columnWidths[idx], row[idx]), end=" ")
+    print(row[-1])
 
   # we need to add optional header output every X lines
   # it is done with an empty line and repeating first row
@@ -99,7 +100,7 @@ class JustifiedTable:
       self.outputRow(idx)
       if maxLines != None:
         if idx % maxLines == 0:
-          print
+          print()
           self.outputRow(0)
 
 # utility to read and parse a comma delimited file (meminfo)
@@ -391,25 +392,25 @@ def getProcessRow(pinfo, statMap, withCpu=0):
 # - print text
 # - print underscore for the line
 def printLabel(s):
-  print
-  print s
-  print '-'*len(s)
+  print()
+  print(s)
+  print('-'*len(s))
 
 # main routine that gathers and outputs the reports
 def doIt():
-  print "Report generated at %s" % time.strftime("%Y-%m-%d %H:%M:%S")
+  print("Report generated at %s" % time.strftime("%Y-%m-%d %H:%M:%S"))
 
   meminfo = getMemInfo()
   printLabel("System wide memory information:")
-  print "RAM: %.2f MiB (%.2f free [%.2f%%])" % (
+  print("RAM: %.2f MiB (%.2f free [%.2f%%])" % (
     float(meminfo["MemTotal"])/1024.0, float(meminfo["UserspaceFree"])/1024.0,
-    (100*meminfo["UserspaceFree"]) / float(meminfo["MemTotal"]))
+    (100*meminfo["UserspaceFree"]) / float(meminfo["MemTotal"])))
   if meminfo["SwapTotal"] > 0:
-    print "Swap: %.2f MiB (%.2f free [%.2f%%])" % (
+    print("Swap: %.2f MiB (%.2f free [%.2f%%])" % (
     float(meminfo["SwapTotal"])/1024.0, float(meminfo["SwapFree"])/1024.0,
-    (100*meminfo["SwapFree"]) / float(meminfo["SwapTotal"]) )
+    (100*meminfo["SwapFree"]) / float(meminfo["SwapTotal"]) ))
   else:
-    print "Swap: None"
+    print("Swap: None")
 
   # statMap is created as follows:
   # - we iterate over all process data and their statusMem-hash
@@ -528,7 +529,7 @@ def doIt():
   pusageTable.output()
 
   if maxCpu > 0:
-    print "\nProcess information per CPU (main-threads only):"
+    print("\nProcess information per CPU (main-threads only):")
     # hmm. we should really take into account the threads
     # on each CPU. this is a misfeature then.
     cpuTable = JustifiedTable()

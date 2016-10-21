@@ -16,14 +16,12 @@
 # VERSION: 1.0.3
 
 from __future__ import print_function
+import sys
 import os
 import string
 import pwd
 import grp
 import time
-
-# set this to 1 for debugging
-DEBUG=0
 
 # utility class to act as a cache for UID lookups
 # since UID lookups will cause possible NSS activity
@@ -555,13 +553,15 @@ def doIt():
         cpuTable.output()
 
 if __name__ == '__main__':
-    # we protect against sigpipe in this way. the wrong way obviously
-    # but was too lazy.
-    # ./meminfo.py | head -5 caused some problems otherwise
-    if DEBUG:
+    try:
         doIt()
-    else:
+    except IOError:
+        # if pipe is closed on us, clean up
         try:
-            doIt()
-        except:
+            sys.stdout.close()
+        except IOError:
+            pass
+        try:
+            sys.stderr.close()
+        except IOError:
             pass

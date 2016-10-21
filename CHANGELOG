@@ -1,3 +1,8 @@
+2016-10-21 1.1 Python 3 port
+- Switch to more common Python code style (indent 4 spaces)
+- Make codebase compatible with Python 3
+  (may break Python 2.5 or older versions)
+
 2013-05-27 1.0.3 Move to github and update readme into MD.
 - No code changes
 

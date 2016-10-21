@@ -13,7 +13,7 @@
 #
 # Please see the included CHANGELOG for change-related information
 #
-# VERSION: 1.0.3
+# VERSION: 1.1
 
 from __future__ import print_function
 import sys

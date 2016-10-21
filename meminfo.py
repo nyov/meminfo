@@ -7,13 +7,13 @@
 # and also do reports based on per-username, per-program name and per-cpu
 # statistics.
 #
-# Copyright 2006 Aleksandr Koltsoff (czr@iki.fi)
+# Copyright 2006-2013 Aleksandr Koltsoff (czr@iki.fi)
 # Released under GPL Version 2 (please see included file COPYING for
 # details).
 #
 # Please see the included CHANGELOG for change-related information
 #
-# VERSION: 1.0.2 (bugfix against 1.0.1)
+# VERSION: 1.0.3 (move to github, no code changes)
 
 # set this to 1 for debugging
 DEBUG=0
@@ -32,7 +32,7 @@ class usernameCache:
   def __init__(self):
     self.uidMap = {}
     self.gidMap = {}
-    
+
   def getUID(self, uid):
     if self.uidMap.has_key(uid):
       return self.uidMap[uid]
@@ -68,7 +68,7 @@ class JustifiedTable:
     self.rows = []
     # this will keep the maximum width of each column so far
     self.columnWidths = []
-    
+
   def addRow(self, row):
     # start by converting all entries into strings
     # (we keep data in string format internally)
@@ -99,15 +99,15 @@ class JustifiedTable:
       self.outputRow(idx)
       if maxLines != None:
         if idx % maxLines == 0:
-	  print
-	  self.outputRow(0)
-	
+          print
+          self.outputRow(0)
+
 # utility to read and parse a comma delimited file (meminfo)
 def parseSplitFile(filename):
   f = open(filename, "rb")
   lines = f.readlines()
   del f
-  
+
   lines = map(lambda x: x.strip().split(), lines)
   return lines
 
@@ -116,17 +116,17 @@ def parseDelimFile(filename):
   f = open(filename, "rb")
   line = f.readline()
   del f
-  
+
   return line.split()
-  
+
 # utility to parse a file which contains one line with delim numbers
 def parseNumberFile(filename):
   f = open(filename, "rb")
   line = f.readline()
   del f
-  
+
   return map(int, line.split())
-  
+
 # routine to get mem info as a hash
 # specifically:
 #   input is a sequence of "Label:", "Value", "kB"
@@ -137,7 +137,7 @@ def parseNumberFile(filename):
 def getMemInfo():
 
   ret = {}
-  
+
   lines = parseSplitFile("/proc/meminfo")
   for line in lines:
     label = line[0]
@@ -148,12 +148,12 @@ def getMemInfo():
     # we only accept lines that have colons after labels
     if label.endswith(":"):
       ret[label[:-1]] = int(line[1])
-      
+
   # after we've done with conversion, we add couple of our own fields
   ret["UserspaceFree"] = ret["MemFree"] + ret["Buffers"] + ret["Cached"]
   ret["SwapUsed"] = ret["SwapTotal"] - ret["SwapFree"]
-    
-  return ret  
+
+  return ret
 
 # a map from /proc/PID/status memory-related fields into column headers
 # other fields that start with Vm will user lower-case columns
@@ -170,17 +170,18 @@ vmStatusMap = {
 # return a hash of 'COLUMN-NAME': value -entries for
 # process specific memory info
 def getProcessMemFromStatus(pid):
-  
+
   ret = {}
   lines = parseSplitFile("/proc/%d/status" % pid)
-  
+
   for line in lines:
     if line[0][:2] == 'Vm':
       vmLabel = line[0][2:-1]
       if vmLabel in vmStatusMap:
         v = int(line[1])
-	if v > 4*1024*1024:
-	  v = -1
+        # !AK a 4 gig limit? uh oh. update to 2013
+        if v > 4*1024*1024:
+          v = -1
         ret[vmStatusMap[vmLabel]] = v
   if len(ret) == 0:
     return None
@@ -207,19 +208,19 @@ def getProcessMemFromStatus(pid):
 # "statusMem" -> hash of additional fields
 def getProcessInfo(pid, kernelBootTicks=0):
   global PAGE_SIZE
-  
+
   pageConv = PAGE_SIZE / 1024
-  
+
   ret = None
-  
+
   try:
     pinfo = {}
 
-    # get process owner and group owner using stat  
+    # get process owner and group owner using stat
     stats = os.stat("/proc/%d" % pid)
     pinfo["uid"] = stats.st_uid
     pinfo["gid"] = stats.st_gid
-    
+
     pmem = parseNumberFile("/proc/%d/statm" % pid)
     # size: total (VMSIZE)
     # resident: rss (total RES)
@@ -227,7 +228,7 @@ def getProcessInfo(pid, kernelBootTicks=0):
     # we don't need the other entries
     del pmem[3:]
     pmem = map(lambda x: x*pageConv, pmem)
-    
+
     # we ignore processes which seem to have zero vmsize (kernel threads)
     if pmem[0] == 0:
       return None
@@ -239,13 +240,13 @@ def getProcessInfo(pid, kernelBootTicks=0):
     # get status (this changes between kernel releases)
     psmem = getProcessMemFromStatus(pid)
     pinfo["statusMem"] = psmem
-    
+
     pstat = parseDelimFile("/proc/%d/stat" % pid)
     # 1: filename of the executable in parentheses
     # 2: state
     # 9: minflt %lu: minor faults (completed without disk access)
     # 11: majflt %lu: major faults
-    
+
     pinfo["cmd"] = pstat[1][1:-1]
     pinfo["state"] = pstat[2]
     pinfo["minflt"] = int(pstat[9])
@@ -263,7 +264,7 @@ def getProcessInfo(pid, kernelBootTicks=0):
 
     pinfo["pid"] = pid
     pinfo["ppid"] = int(pstat[3])
-    
+
     # attempt to count the number of threads
     # note than on older linuxen there is no /proc/X/task/
     threadCount = 0
@@ -274,11 +275,11 @@ def getProcessInfo(pid, kernelBootTicks=0):
       pass
     pinfo["threads"] = threadCount
 
-    ret = pinfo    
-    
+    ret = pinfo
+
   except:
     pass
-    
+
   return ret
 
 # utility to return process information (for all processes)
@@ -287,7 +288,7 @@ def getProcessInfos():
   # this will be the return structure
   # the key will be the pid
   pinfos = {}
-  
+
   # start by getting kernel uptime
   kernelUptime, kernelIdleTime = parseDelimFile("/proc/uptime")
   kernelUptime = int(float(kernelUptime)*100)
@@ -303,7 +304,7 @@ def getProcessInfos():
       pid = int(n)
     except:
       continue
-    
+
     # at this point we know that n is a number
     # note that it might be so that the process doesn't exist anymore
     # this is why we just ignore it if it has gone AWOL.
@@ -330,18 +331,18 @@ def getTime(ticks):
   hours = minutes / 60
   minutes = minutes % 60
   return "%dh%.2dm%.2ds" % (hours, minutes, secs)
-  
+
 # routine that will tell when something started based on given value in ticks
 # ticks is understood to mean "for" (ie, when something was started X ticks ago)
 # the label is "started", so an absolute timestamp would be nice
 # if difference to current clock is more than one day, we display the date
-def getElapsed(ticks, now=time.time()):  
+def getElapsed(ticks, now=time.time()):
   ticks /= 100 # conv to seconds
   if ticks < 60*60*24:
     return time.strftime("%H:%M:%S", time.localtime(now-ticks))
   else:
     return time.strftime("%Y-%m-%d", time.localtime(now-ticks))
-  
+
 # utility to get process info as a row suitable into tabling
 # note that this might get a bit hairy wrt the extra memory fields
 # we need to preserve order and insert "" if there are missing
@@ -360,7 +361,7 @@ def getProcessRow(pinfo, statMap, withCpu=0):
   cpu = None
   if withCpu:
     cpu = pinfo["cpu"]
-    
+
   mainInfo = [
     pinfo["pid"],
     n,
@@ -373,7 +374,7 @@ def getProcessRow(pinfo, statMap, withCpu=0):
     getElapsed(pinfo["existsFor"]),
     pinfo["state"],
     pinfo["cmd"]+threadStr ]
-    
+
   # generate the statusMem entries
   statusMem = pinfo["statusMem"]
   statusMemEntries = []
@@ -395,13 +396,13 @@ def printLabel(s):
   print '-'*len(s)
 
 # main routine that gathers and outputs the reports
-def doIt():  
+def doIt():
   print "Report generated at %s" % time.strftime("%Y-%m-%d %H:%M:%S")
 
   meminfo = getMemInfo()
   printLabel("System wide memory information:")
   print "RAM: %.2f MiB (%.2f free [%.2f%%])" % (
-    float(meminfo["MemTotal"])/1024.0, float(meminfo["UserspaceFree"])/1024.0, 
+    float(meminfo["MemTotal"])/1024.0, float(meminfo["UserspaceFree"])/1024.0,
     (100*meminfo["UserspaceFree"]) / float(meminfo["MemTotal"]))
   if meminfo["SwapTotal"] > 0:
     print "Swap: %.2f MiB (%.2f free [%.2f%%])" % (
@@ -439,7 +440,7 @@ def doIt():
   plist.reverse()
 
   processTable = JustifiedTable()
-  
+
   # prepare the statMap
   statMap = statMap.keys()
   statMap.sort()
@@ -457,9 +458,9 @@ def doIt():
   for dummy, pid in plist:
     row = getProcessRow(pinfos[pid], statMap, maxCpu > 0)
     processTable.addRow(row)
-    
+
   processTable.output(25)
-  
+
   # we also print out per UID report on memory usage
   users = {}
   for v in pinfos.items():
@@ -487,7 +488,7 @@ def doIt():
   for ures, ucount, utime, stime, uid in ulist:
     userTable.addRow((nameCache.getUID(uid), ucount, getTime(utime), getTime(stime), "%.2f MiB" % (float(ures) /1024.0)))
   userTable.output(25)
-  
+
   # next we make a table giving the memory totals keyed with process names
   pusage = {}
   for v in pinfos.items():
@@ -531,7 +532,7 @@ def doIt():
     # hmm. we should really take into account the threads
     # on each CPU. this is a misfeature then.
     cpuTable = JustifiedTable()
-    cpuTable.addRow(("CPU", "Count", "USER-TIME", "SYS-TIME", "MEM-TOTAL"))    
+    cpuTable.addRow(("CPU", "Count", "USER-TIME", "SYS-TIME", "MEM-TOTAL"))
 
     cpuStats = {}
     for v in pinfos.items():
@@ -541,7 +542,7 @@ def doIt():
       stime = pinfo["stime"]
       ures = pinfo["ures"]
       if cpuStats.has_key(cpu):
-	cpuStats[cpu][1] += 1
+        cpuStats[cpu][1] += 1
         cpuStats[cpu][2] += utime
         cpuStats[cpu][3] += stime
         cpuStats[cpu][4] += ures
@@ -554,7 +555,7 @@ def doIt():
     for entry in cpuList:
       cpuTable.addRow((entry[0], entry[1], getTime(entry[2]), getTime(entry[3]), "%.2f MiB" % (float(entry[4]) / 1024.0)))
     cpuTable.output()
-	
+
 if __name__ == '__main__':
   # we protect against sigpipe in this way. the wrong way obviously
   # but was too lazy.

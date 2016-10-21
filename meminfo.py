@@ -13,7 +13,7 @@
 #
 # Please see the included CHANGELOG for change-related information
 #
-# VERSION: 1.0.3 (move to github, no code changes)
+# VERSION: 1.0.3
 
 from __future__ import print_function
 import os
@@ -35,7 +35,7 @@ class usernameCache:
         self.gidMap = {}
 
     def getUID(self, uid):
-        if self.uidMap.has_key(uid):
+        if uid in self.uidMap:
             return self.uidMap[uid]
 
         nameData = None
@@ -73,7 +73,7 @@ class JustifiedTable:
     def addRow(self, row):
         # start by converting all entries into strings
         # (we keep data in string format internally)
-        row = map(str, row)
+        row = list(map(str, row))
         # check if we have enough columnWidths for this row
         if len(self.columnWidths) < len(row):
             self.columnWidths += [0] * (len(row) - len(self.columnWidths))
@@ -105,28 +105,25 @@ class JustifiedTable:
 
 # utility to read and parse a comma delimited file (meminfo)
 def parseSplitFile(filename):
-    f = open(filename, "rb")
-    lines = f.readlines()
-    del f
-
-    lines = map(lambda x: x.strip().split(), lines)
+    lines = []
+    with open(filename, "r") as f:
+        lines = f.readlines()
+    lines = [x.strip().split() for x in lines]
     return lines
 
 # utility to parse a file which contains one line with delim entries
 def parseDelimFile(filename):
-    f = open(filename, "rb")
-    line = f.readline()
-    del f
-
+    line = ''
+    with open(filename, "r") as f:
+        line = f.readline()
     return line.split()
 
 # utility to parse a file which contains one line with delim numbers
 def parseNumberFile(filename):
-    f = open(filename, "rb")
-    line = f.readline()
-    del f
-
-    return map(int, line.split())
+    line = ''
+    with open(filename, "r") as f:
+        line = f.readline()
+    return list(map(int, line.split()))
 
 # routine to get mem info as a hash
 # specifically:
@@ -228,7 +225,7 @@ def getProcessInfo(pid, kernelBootTicks=0):
         # share: shared pages (SHARED)
         # we don't need the other entries
         del pmem[3:]
-        pmem = map(lambda x: x*pageConv, pmem)
+        pmem = list(map(lambda x: x*pageConv, pmem))
 
         # we ignore processes which seem to have zero vmsize (kernel threads)
         if pmem[0] == 0:
@@ -374,13 +371,13 @@ def getProcessRow(pinfo, statMap, withCpu=0):
         cpu,
         getElapsed(pinfo["existsFor"]),
         pinfo["state"],
-        pinfo["cmd"]+threadStr ]
+        pinfo["cmd"] + threadStr ]
 
     # generate the statusMem entries
     statusMem = pinfo["statusMem"]
     statusMemEntries = []
     for label in statMap:
-        if statusMem.has_key(label):
+        if label in statusMem:
             statusMemEntries.append(statusMem[label])
         else:
             statusMemEntries.append("")
@@ -443,7 +440,7 @@ def doIt():
     processTable = JustifiedTable()
 
     # prepare the statMap
-    statMap = statMap.keys()
+    statMap = list(statMap.keys())
     statMap.sort()
 
     cpuHeader = None
@@ -452,7 +449,7 @@ def doIt():
 
     mainHeader = ["PID", "UID", "URES", "SHR", "VIRT"]
     postHeader = ["MINFLT", "MAJFLT", cpuHeader, "Started", "S", "CMD (n threads)"]
-    statHeader = map(lambda x: x.lower(), statMap)
+    statHeader = [x.lower() for x in statMap]
 
     processTable.addRow(mainHeader + statHeader + postHeader)
 
@@ -467,7 +464,7 @@ def doIt():
     for v in pinfos.items():
         pinfo = v[1]
         uid = pinfo["uid"]
-        if users.has_key(uid):
+        if uid in users:
             users[uid][0] += pinfo["ures"]
             users[uid][1] += 1
             users[uid][2] += pinfo["utime"]
@@ -495,7 +492,7 @@ def doIt():
     for v in pinfos.items():
         pinfo = v[1]
         cmd = pinfo["cmd"]
-        if pusage.has_key(cmd):
+        if cmd in pusage:
             pusage[cmd][0] += pinfo["ures"]
             pusage[cmd][1] += 1
             pusage[cmd][2] += pinfo["utime"]
@@ -542,7 +539,7 @@ def doIt():
             utime = pinfo["utime"]
             stime = pinfo["stime"]
             ures = pinfo["ures"]
-            if cpuStats.has_key(cpu):
+            if cpu in cpuStats:
                 cpuStats[cpu][1] += 1
                 cpuStats[cpu][2] += utime
                 cpuStats[cpu][3] += stime
